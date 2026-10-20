@@ -1,5 +1,6 @@
 import socket
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 def scan_port(host, port, timeout=0.5):
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -14,17 +15,16 @@ def scan_port(host, port, timeout=0.5):
     finally:
         client.close()
 
-def scan_range(host,start_port,end_port,timeout=0.5):
-    open_ports = []
-    for port in range(start_port, end_port + 1):
-        if scan_port(host, port, timeout):
-            open_ports.append(port)
-    return open_ports
+def scan_range(host,start_port,end_port,timeout=0.5,workers=100):
+    ports = range(start_port,end_port + 1)
+    with ThreadPoolExecutor(max_workers = workers) as pool:
+        results = pool.map(lambda port: (port, scan_port(host, port,timeout)),ports)
+    return [port for port, is_open in results if is_open]
 
 def main():
     host = "127.0.0.1"
-    start_port = 1
-    end_port = 60
+    start_port = 130
+    end_port = 140
 
     print(f"Scanning ports {start_port} to {end_port} on host {host}...")
 
