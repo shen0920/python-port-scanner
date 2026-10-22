@@ -1,5 +1,6 @@
 import socket
 import time
+import argparse
 from concurrent.futures import ThreadPoolExecutor
 
 def scan_port(host, port, timeout=0.5):
@@ -15,21 +16,36 @@ def scan_port(host, port, timeout=0.5):
     finally:
         client.close()
 
-def scan_range(host,start_port,end_port,timeout=0.5,workers=100):
+def scan_range(host,start_port,end_port,timeout=0.5,workers=200):
     ports = range(start_port,end_port + 1)
     with ThreadPoolExecutor(max_workers = workers) as pool:
         results = pool.map(lambda port: (port, scan_port(host, port,timeout)),ports)
-    return [port for port, is_open in results if is_open]
+    return sorted(port for port, is_open in results if is_open)
+
+def parse_args():
+    parser = argparse.ArgumentParser(description= "简单的TCP端口扫描器")
+    parser.add_argument("host", help="目标主机")
+    parser.add_argument("start_port", type=int, help="起始端口" )
+    parser.add_argument("end_port", type=int, help="结束端口")
+    parser.add_argument("--timeout", type=float, default=0.5, help="连接超时时间（秒）")
+    parser.add_argument("--workers", type=int, default=200, help="并发线程数")
+    return parser.parse_args()
+
+def validate(args):
+    if not(1 <= args.start_port <= 65535):
+        raise SystemExit("起始端口必须在1到65535之间")
+    if not(1 <= args.end_port <= 65535):
+        raise SystemExit("结束端口必须在1到65535之间")
+    if args.start_port > args.end_port:
+        raise SystemExit("起始端口不能大于结束端口")
 
 def main():
-    host = "127.0.0.1"
-    start_port = 130
-    end_port = 140
+    args = parse_args()
 
-    print(f"Scanning ports {start_port} to {end_port} on host {host}...")
+    print(f"Scanning ports {args.start_port} to {args.end_port} on host {args.host}...")
 
     begin = time.perf_counter()
-    open_ports = scan_range(host, start_port, end_port)
+    open_ports = scan_range(args.host, args.start_port, args.end_port, args.timeout, args.workers)
     cost = time.perf_counter() - begin
 
     print(f"Open ports: {open_ports}")
@@ -38,5 +54,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
