@@ -27,8 +27,8 @@ def parse_args():
     parser.add_argument("host", help="目标主机")
     parser.add_argument("start_port", type=int, help="起始端口" )
     parser.add_argument("end_port", type=int, help="结束端口")
-    parser.add_argument("--timeout", type=float, default=0.5, help="连接超时时间（秒）")
-    parser.add_argument("--workers", type=int, default=200, help="并发线程数")
+    parser.add_argument("-t", "--timeout", type=float, default=0.5, help="连接超时时间（秒）")
+    parser.add_argument("-w", "--workers", type=int, default=200, help="并发线程数")
     return parser.parse_args()
 
 def validate(args):
