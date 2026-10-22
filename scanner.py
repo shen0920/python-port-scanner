@@ -41,6 +41,7 @@ def validate(args):
 
 def main():
     args = parse_args()
+    validate(args)
 
     print(f"Scanning ports {args.start_port} to {args.end_port} on host {args.host}...")
 
