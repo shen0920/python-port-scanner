@@ -31,6 +31,13 @@ def parse_args():
     parser.add_argument("-w", "--workers", type=int, default=200, help="并发线程数")
     return parser.parse_args()
 
+def resolve_host(host):
+    try:
+        return socket.gethostbyname(host)
+    except socket.gaierror:
+        raise SystemExit(f"无法解析主机名: {host}")
+
+
 def validate(args):
     if not(1 <= args.start_port <= 65535):
         raise SystemExit("起始端口必须在1到65535之间")
@@ -42,11 +49,11 @@ def validate(args):
 def main():
     args = parse_args()
     validate(args)
-
-    print(f"Scanning ports {args.start_port} to {args.end_port} on host {args.host}...")
+    ip = resolve_host(args.host)
+    print(f"Scanning ports {args.start_port} to {args.end_port} on host {ip}...")
 
     begin = time.perf_counter()
-    open_ports = scan_range(args.host, args.start_port, args.end_port, args.timeout, args.workers)
+    open_ports = scan_range(ip, args.start_port, args.end_port, args.timeout, args.workers)
     cost = time.perf_counter() - begin
 
     print(f"Open ports: {open_ports}")
